@@ -7,59 +7,43 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import time
 
-# desired item to look for:
+import spf_lib as sz
+
+# define item to look for and website:
 item = "spf"
+website = "https://www.hebe.pl"
+# website = "https://www.hebe.pl/search?lang=pl_PL&q=spf"
 
-# disable pop-ups
-option = Options()
-option.add_argument('--disable-notifications')
-
-# use chrome driver
-PATH = "C:\Program Files (x86)\chromedriver.exe"
-driver = webdriver.Chrome(options= option)
-
-# load website
-url = "https://www.hebe.pl"
-driver.get(url)
-
-# define action chain to click "Next Page" button
-actions = ActionChains(driver)
-
-# key element labels to find on each page
-search_bar_xpath = f'//*[@id="q"]'
-search_button_xpath = '//*[@id="wrapper"]/div[1]/div[1]/div[1]/div/div[6]/div[2]/div/div/div[2]/a'
-next_page_button_class = "a.button.button--outline.button--icon "
-
-# use search bar to search for phrase defined in "item"
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, search_bar_xpath)))
-search_bar = driver.find_element(By.XPATH, search_bar_xpath)
-search_bar.clear()
-search_bar.send_keys(item)
-
-# manually wait a long time until button would be clickable (WebDriverWait does not work)
-# WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, search_button_xpath)))
-time.sleep(1)
-button = driver.find_element(By.XPATH, search_button_xpath)
-time.sleep(2)
-button.click()
-time.sleep(0.5)
+# use chrome driver, assume chromedriver added to environmental variable PATH
+scraper = sz.HebeWebScraper(website)
+scraper.open_website()
 
 # print header of matching item list
-print(driver.title)
-print("PRICE\tREG\tLOW\tITEM\t\tDESCRIPTION\t\tLINK")
+print(f"\n\n{scraper.driver.title}\n")
+print(scraper)
+
+# now they have special offer so need to close the pop-up window
+time.sleep(5)
+scraper.click(scraper.pop_up_dismiss)
+
+# use search bar to search for phrase defined in "item"
+scraper.search(item)
+time.sleep(2)
+scraper.click(scraper.search_button)
+
+# scraper.driver.get_screenshot_as_file("screenshot.png")
+
 
 # search first 10 pages
 for i in range(10): 
     # scroll to the bottom of the page to load all items and "Next Page" button
-    html = driver.find_element(By.TAG_NAME, 'html')
-    html.send_keys(Keys.END)
-    html.send_keys(Keys.PAGE_UP)
+    scraper.scroll(1, end=True)
 
     # read all item list
     product_class = "product-grid__item "
-    products = driver.find_elements(By.CLASS_NAME, product_class)
+    products = scraper.driver.find_elements(By.CLASS_NAME, product_class)
     time.sleep(1)
-    
+
     # iterate over list of products
     for product in products:
         # check whether it is on sale
@@ -83,19 +67,13 @@ for i in range(10):
             print(f"{name}, {description}")
             print(f"{link}\n")
     
+    time.sleep(3)
     # proceed to the next page
-    # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, next_page_button_xpath)))
-    next_page = driver.find_element(By.XPATH, '//a[contains(., "Następna strona")]')
-    time.sleep(0.5)
-    actions.move_to_element(next_page)
-    time.sleep(4)
-    actions.click()
-    actions.perform()
-    time.sleep(5)
+    scraper.hover_and_click(scraper.next_page_button)
 
 
 time.sleep(30)
-driver.quit()
+scraper.quit()
 
 
 # TODO
