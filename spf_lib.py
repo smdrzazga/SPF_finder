@@ -12,7 +12,10 @@ class Notifications:
     def options(self):
         chrome_options = Options()
         chrome_options.add_argument('--disable-notifications')
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--ignore-certificate-errors")
+        # chrome_options.add_argument("--disable-popup-blocking")
+        # chrome_options.add_argument("diable-lazy-loading")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")
         return chrome_options
  
@@ -59,10 +62,16 @@ LINK \t|\n
         self.driver.get(self.website)
 
 
-    def find(self, element: PageElement):
+    def find_single(self, element: PageElement):
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((element.locator, element.name)))
         
         return self.driver.find_element(element.locator, element.name)
+
+
+    def find_all(self, element: PageElement):
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((element.locator, element.name)))
+        
+        return self.driver.find_elements(element.locator, element.name)
 
 
     def find_clickable(self, element: PageElement):
@@ -75,16 +84,18 @@ LINK \t|\n
         # wait for button to be clickable and click
         # button = self.find_clickable(element)
 
-        button = self.find(element)
+        button = self.find_single(element)
 
         time.sleep(0.5)
         button.click()
 
 
     def search(self, item):
-        search_bar = self.find(self.search_bar)
+        search_bar = self.find_single(self.search_bar)
         search_bar.clear()
         search_bar.send_keys(item)
+        time.sleep(1)
+        search_bar.send_keys(Keys.ENTER)
 
 
     def scroll(self, amount, end=False):
@@ -104,8 +115,7 @@ LINK \t|\n
         actions = ActionChains(self.driver)
 
         try:
-            button = self.find(element)
-            # button = self.driver.find_element(By.CLASS_NAME, element.name)
+            button = self.find_single(element)
         except:
             print("no button")
         actions.move_to_element(button)
@@ -114,16 +124,13 @@ LINK \t|\n
         time.sleep(4)
     
 
+    def is_on_sale(self):
+        return False
+
+
     def quit(self):
         self.driver.quit()
 
-
-
-class HebeWebScraper(WebScraper):
-    def __init__(self, URL):
-        super().__init__(URL)
-        self.search_bar = PageElement(name=f"q")
-        self.search_button = PageElement(xpath='//*[@id="wrapper"]/div[1]/div[1]/div[1]/div/div[6]/div[2]/div/div/div[2]/a')
-        self.next_page_button = PageElement(class_name="bucket-pagination__icon.bucket-pagination__icon--next")
-        self.pop_up_dismiss = PageElement(id="close-button-1454703513202")
     
+
+
