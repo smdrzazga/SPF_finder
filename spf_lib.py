@@ -48,15 +48,14 @@ class WebScraper:
         self.website = URL
         self.driver = webdriver.Chrome(options = Notifications().options())
 
-    
-    def __repr__(self) -> str:
-        return """
+    legend = """
 PRICE \t|  REG \t|  LOW \t|
 -------------------------
 ITEM \t|  DESCRIPTION \t|  
 -------------------------
 LINK \t|\n
       """
+    
 
     def open_website(self):
         self.driver.get(self.website)
@@ -107,7 +106,7 @@ LINK \t|\n
         
         else:
             for i in range(amount):
-                html.send_keys(Keys.PAGE_UP)
+                html.send_keys(Keys.PAGE_DOWN)
 
 
 
@@ -118,15 +117,12 @@ LINK \t|\n
             button = self.find_single(element)
         except:
             print("no button")
+
         actions.move_to_element(button)
         actions.click()
         actions.perform()
-        time.sleep(4)
+        time.sleep(2)
     
-
-    def is_on_sale(self):
-        return False
-
 
     def quit(self):
         self.driver.quit()
